@@ -1,0 +1,6 @@
+{
+  "name": "LUDO",
+  "description": "Ultimate 3D Multiplayer Ludo Board Game with Classic, 6-Player, Team, AI, and Power Modes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
