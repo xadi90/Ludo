@@ -4,6 +4,9 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
@@ -47,9 +50,20 @@ jobs:
       - name: Build Debug APK
         run: gradle :app:assembleDebug --no-daemon
 
-      - name: Upload LUDO Debug APK
+      - name: Upload LUDO Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: LUDO-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
+
+      - name: Publish Direct LUDO.apk to GitHub Releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk LUDO.apk
+          if gh release view latest >/dev/null 2>&1; then
+            gh release upload latest LUDO.apk --clobber
+          else
+            gh release create latest LUDO.apk --target "${{ github.sha }}" --title "LUDO Latest APK" --notes "Direct installable Android APK (no zip extraction required)."
+          fi
