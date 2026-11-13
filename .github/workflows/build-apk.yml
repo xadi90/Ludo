@@ -64,15 +64,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk LUDO.apk
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -f latest "${{ github.sha }}"
-          git push -f origin refs/tags/latest
           if gh release view latest >/dev/null 2>&1; then
             gh release edit latest --title "LUDO Latest APK" --notes "Direct installable Android APK (no zip extraction required). Commit: ${{ github.sha }}"
             gh release upload latest LUDO.apk --clobber
           else
-            gh release create latest LUDO.apk --title "LUDO Latest APK" --notes "Direct installable Android APK (no zip extraction required)."
+            gh release create latest LUDO.apk --target "${{ github.sha }}" --title "LUDO Latest APK" --notes "Direct installable Android APK (no zip extraction required)."
           fi
           APK_URL="https://github.com/${{ github.repository }}/releases/latest/download/LUDO.apk"
           {
