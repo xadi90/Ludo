@@ -4,12 +4,14 @@ import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTouchInput
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.local.GameStateSerializer
 import com.example.game.BoardType
@@ -95,11 +97,67 @@ class ExampleRobolectricTest {
     }
 
     @Test
-    fun `snakes and ladders launches from home screen with board and dice`() {
+    fun `snakes and ladders launches from home screen with board and 4 corner dice pods`() {
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("menu_snakes_ladders").performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("snakes_ladders_board").assertIsDisplayed()
         composeRule.onNodeWithTag("snakes_dice_button").assertIsDisplayed()
+
+        // Switch to 4 Players and verify all 4 corner pods + active dice are displayed
+        composeRule.onNodeWithTag("snakes_mode_four_player").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("snakes_corner_pod_0").assertIsDisplayed()
+        composeRule.onNodeWithTag("snakes_corner_pod_1").assertIsDisplayed()
+        composeRule.onNodeWithTag("snakes_corner_pod_2").assertIsDisplayed()
+        composeRule.onNodeWithTag("snakes_corner_pod_3").assertIsDisplayed()
+        composeRule.onNodeWithTag("snakes_dice_button").assertIsDisplayed()
+    }
+
+    @Test
+    fun `secret vault pin setup verification and aes encryption roundtrip`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val vault = com.example.vault.SecretVaultManager(context)
+        vault.setOrChangePin("2580")
+        assertEquals(true, vault.isPinConfigured())
+        assertEquals(false, vault.verifyPin("0000"))
+        assertEquals(true, vault.verifyPin("2580"))
+
+        val sampleBytes = "Secret Gallery Photo Bytes 12345".toByteArray()
+        val item = vault.importRawBytes(
+            displayName = "secret_pic.jpg",
+            mimeType = "image/jpeg",
+            mediaType = com.example.vault.VaultMediaType.IMAGE,
+            plainBytes = sampleBytes
+        )
+        assertEquals(1, vault.listItems().size)
+        val decrypted = vault.readDecryptedBytes(item)
+        assertNotNull(decrypted)
+        assertEquals(String(sampleBytes), String(decrypted!!))
+
+        vault.deleteItem(item.id)
+        assertEquals(0, vault.listItems().size)
+    }
+
+    @Test
+    fun `long pressing LUDO banner opens secret vault pin setup and unlocks`() {
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("hero_banner_vault_trigger").performTouchInput { longClick() }
+        composeRule.waitForIdle()
+
+        // Step 1: Set PIN 1234
+        listOf("1", "2", "3", "4", "OK").forEach { key ->
+            composeRule.onNodeWithTag("vault_key_$key").performClick()
+        }
+        composeRule.waitForIdle()
+
+        // Step 2: Confirm PIN 1234
+        listOf("1", "2", "3", "4", "OK").forEach { key ->
+            composeRule.onNodeWithTag("vault_key_$key").performClick()
+        }
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithTag("vault_add_media_button").assertIsDisplayed()
+        composeRule.onNodeWithTag("vault_add_files_button").assertIsDisplayed()
     }
 }

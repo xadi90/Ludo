@@ -22,6 +22,7 @@ import com.example.ui.screens.LeaderboardScreen
 import com.example.ui.screens.OnlineMultiplayerScreen
 import com.example.ui.screens.PlayerProfileScreen
 import com.example.ui.screens.PlayerSetupScreen
+import com.example.ui.screens.SecretVaultScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.SnakesLaddersScreen
 import com.example.ui.screens.TournamentScreen
@@ -40,6 +41,7 @@ object LudoRoutes {
     const val ROUTE_SETTINGS = "settings"
     const val ROUTE_ABOUT_DEVELOPER = "about_developer"
     const val ROUTE_SNAKES_LADDERS = "snakes_ladders"
+    const val ROUTE_VAULT = "secret_vault"
 }
 
 @Composable
@@ -142,6 +144,10 @@ fun LudoNavHost(
                 onAboutDeveloper = {
                     viewModel.soundManager.playButtonClick()
                     navController.navigate(LudoRoutes.ROUTE_ABOUT_DEVELOPER)
+                },
+                onOpenSecretVault = {
+                    viewModel.soundManager.playButtonClick()
+                    navController.navigate(LudoRoutes.ROUTE_VAULT)
                 }
             )
         }
@@ -296,6 +302,10 @@ fun LudoNavHost(
                     viewModel.soundManager.playButtonClick()
                     navController.navigate(LudoRoutes.ROUTE_ABOUT_DEVELOPER)
                 },
+                onOpenSecretVault = {
+                    viewModel.soundManager.playButtonClick()
+                    navController.navigate(LudoRoutes.ROUTE_VAULT)
+                },
                 onBack = {
                     viewModel.soundManager.playButtonClick()
                     navController.popBackStack()
@@ -324,6 +334,16 @@ fun LudoNavHost(
                 onToggleVibration = {
                     viewModel.updateSettings { it.copy(vibrationEnabled = !it.vibrationEnabled) }
                 },
+                onBack = {
+                    viewModel.soundManager.playButtonClick()
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(LudoRoutes.ROUTE_VAULT) {
+            SecretVaultScreen(
+                darkTheme = settings.darkThemeMode,
                 onBack = {
                     viewModel.soundManager.playButtonClick()
                     navController.popBackStack()

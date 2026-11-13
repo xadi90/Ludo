@@ -52,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -75,7 +76,6 @@ import com.example.ui.components.RoyalArenaBackground
 import com.example.ui.components.SnakesLaddersBoardCanvas
 import com.example.ui.theme.ArenaCardSurface
 import com.example.ui.theme.GoldAccent
-import com.example.ui.theme.LudoBlue
 import com.example.ui.theme.LudoGreen
 import com.example.ui.theme.LudoOrange
 import com.example.ui.theme.LudoRed
@@ -144,6 +144,8 @@ fun SnakesLaddersScreen(
         }
     }
 
+    val useFourCornerPods = state.players.size >= 3
+
     RoyalArenaBackground(darkTheme = settings.darkThemeMode) {
         Column(
             modifier = Modifier
@@ -162,12 +164,15 @@ fun SnakesLaddersScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Surface(
                         shape = CircleShape,
                         color = ArenaCardSurface.copy(alpha = 0.85f),
                         border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f)),
-                        modifier = Modifier.size(44.dp)
+                        modifier = Modifier.size(42.dp)
                     ) {
                         IconButton(
                             onClick = {
@@ -181,14 +186,14 @@ fun SnakesLaddersScreen(
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = strings.snakesAndLadders,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black),
-                        color = GoldAccent,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
+                        color = if (settings.darkThemeMode) GoldAccent else Color(0xFF0A2463),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                     SnakesHudChip(
                         icon = if (settings.sfxEnabled) Icons.AutoMirrored.Filled.VolumeUp else Icons.AutoMirrored.Filled.VolumeOff,
                         desc = "Sound",
@@ -250,6 +255,17 @@ fun SnakesLaddersScreen(
                 }
             }
 
+            // Top Corner Player+Dice Pods when 3P/4P is active
+            if (useFourCornerPods) {
+                SnakesCornerRow(
+                    state = state,
+                    leftPlayerIndex = 0,
+                    rightPlayerIndex = 1,
+                    isRolling = isRolling,
+                    onRollClick = ::triggerHumanRoll
+                )
+            }
+
             // 10x10 Snakes & Ladders Board
             Box(
                 modifier = Modifier
@@ -261,31 +277,56 @@ fun SnakesLaddersScreen(
                 SnakesLaddersBoardCanvas(state = state)
             }
 
-            // Turn Status Banner
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = ArenaCardSurface.copy(alpha = 0.9f),
-                border = BorderStroke(1.dp, state.currentPlayer.color.primary.copy(alpha = 0.7f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = state.statusMessage,
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    color = GoldAccent,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
+            // Bottom Corner Player+Dice Pods for 3P/4P, OR classic 2P Dock for You vs Com / 2P
+            if (useFourCornerPods) {
+                SnakesCornerRow(
+                    state = state,
+                    leftPlayerIndex = 2,
+                    rightPlayerIndex = 3,
+                    isRolling = isRolling,
+                    onRollClick = ::triggerHumanRoll
+                )
+                Spacer(Modifier.height(4.dp))
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = ArenaCardSurface.copy(alpha = 0.9f),
+                    border = BorderStroke(1.dp, state.currentPlayer.color.primary.copy(alpha = 0.7f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = state.statusMessage,
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                        color = GoldAccent,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
+                    )
+                }
+            } else {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = ArenaCardSurface.copy(alpha = 0.9f),
+                    border = BorderStroke(1.dp, state.currentPlayer.color.primary.copy(alpha = 0.7f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = state.statusMessage,
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                        color = GoldAccent,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
+                    )
+                }
+
+                Spacer(Modifier.height(6.dp))
+
+                SnakesTwoPlayerDock(
+                    state = state,
+                    isRolling = isRolling,
+                    onRollClick = ::triggerHumanRoll
                 )
             }
-
-            Spacer(Modifier.height(6.dp))
-
-            // Bottom Player + Center Dice Bar (matching Snakes & Ladders screenshot)
-            SnakesBottomControlDock(
-                state = state,
-                isRolling = isRolling,
-                onRollClick = ::triggerHumanRoll
-            )
         }
     }
 
@@ -295,7 +336,7 @@ fun SnakesLaddersScreen(
             title = { Text(strings.snakesAndLadders, fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("• Tap the dice on your turn to move across tiles 1 to 100.")
+                    Text("• Tap the active player's dice to roll and move across tiles 1 to 100.")
                     Text("• Land at the bottom of a Ladder to climb straight up!")
                     Text("• Land on a Snake's head and you'll slide down to its tail.")
                     Text("• Roll a 6 to earn a bonus roll.")
@@ -385,7 +426,210 @@ fun SnakesLaddersScreen(
 }
 
 @Composable
-private fun SnakesBottomControlDock(
+private fun SnakesCornerRow(
+    state: SnakesLaddersState,
+    leftPlayerIndex: Int,
+    rightPlayerIndex: Int,
+    isRolling: Boolean,
+    onRollClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val leftPlayer = state.players.getOrNull(leftPlayerIndex)
+        if (leftPlayer != null) {
+            SnakesCornerPod(
+                playerIndex = leftPlayerIndex,
+                player = leftPlayer,
+                isActive = state.currentTurnIndex == leftPlayerIndex && !state.isMatchOver,
+                lastDiceRoll = state.lastDiceRoll,
+                isRolling = isRolling && state.currentTurnIndex == leftPlayerIndex,
+                diceOnRight = true,
+                onRollClick = onRollClick,
+                modifier = Modifier.weight(1f)
+            )
+        } else {
+            Spacer(modifier = Modifier.weight(1f))
+        }
+
+        val rightPlayer = state.players.getOrNull(rightPlayerIndex)
+        if (rightPlayer != null) {
+            SnakesCornerPod(
+                playerIndex = rightPlayerIndex,
+                player = rightPlayer,
+                isActive = state.currentTurnIndex == rightPlayerIndex && !state.isMatchOver,
+                lastDiceRoll = state.lastDiceRoll,
+                isRolling = isRolling && state.currentTurnIndex == rightPlayerIndex,
+                diceOnRight = false,
+                onRollClick = onRollClick,
+                modifier = Modifier.weight(1f)
+            )
+        } else {
+            Spacer(modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun SnakesCornerPod(
+    playerIndex: Int,
+    player: SnakesPlayer,
+    isActive: Boolean,
+    lastDiceRoll: Int?,
+    isRolling: Boolean,
+    diceOnRight: Boolean,
+    onRollClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val canRoll = isActive && !player.isAi && !isRolling
+    val podShape = RoundedCornerShape(16.dp)
+    val bgBrush = if (isActive) {
+        Brush.verticalGradient(
+            listOf(
+                player.color.primary.copy(alpha = 0.88f),
+                player.color.dark.copy(alpha = 0.96f)
+            )
+        )
+    } else {
+        Brush.verticalGradient(
+            listOf(
+                ArenaCardSurface.copy(alpha = 0.86f),
+                Color(0xFF0A1638).copy(alpha = 0.88f)
+            )
+        )
+    }
+
+    Surface(
+        shape = podShape,
+        color = Color.Transparent,
+        border = BorderStroke(
+            width = if (isActive) 2.5.dp else 1.2.dp,
+            color = if (isActive) GoldAccent else player.color.primary.copy(alpha = 0.55f)
+        ),
+        modifier = modifier
+            .shadow(if (isActive) 10.dp else 3.dp, podShape, ambientColor = player.color.primary)
+            .clip(podShape)
+            .background(bgBrush)
+            .clickable(enabled = canRoll, onClick = onRollClick)
+            .testTag("snakes_corner_pod_$playerIndex")
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            if (diceOnRight) {
+                SnakesPodInfo(player = player, isActive = isActive, modifier = Modifier.weight(1f))
+                Spacer(Modifier.width(4.dp))
+                SnakesCornerDiceSlot(
+                    player = player,
+                    isActive = isActive,
+                    canRoll = canRoll,
+                    lastDiceRoll = lastDiceRoll,
+                    isRolling = isRolling,
+                    onRollClick = onRollClick
+                )
+            } else {
+                SnakesCornerDiceSlot(
+                    player = player,
+                    isActive = isActive,
+                    canRoll = canRoll,
+                    lastDiceRoll = lastDiceRoll,
+                    isRolling = isRolling,
+                    onRollClick = onRollClick
+                )
+                Spacer(Modifier.width(4.dp))
+                SnakesPodInfo(player = player, isActive = isActive, modifier = Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+@Composable
+private fun SnakesPodInfo(
+    player: SnakesPlayer,
+    isActive: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(30.dp)
+                .clip(CircleShape)
+                .background(player.color.primary)
+                .border(1.5.dp, Color.White, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = if (player.isAi) Icons.Filled.SmartToy else Icons.Filled.Person,
+                contentDescription = player.name,
+                tint = Color.White,
+                modifier = Modifier.size(17.dp)
+            )
+        }
+        Spacer(Modifier.width(6.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = player.name,
+                style = MaterialTheme.typography.labelLarge.copy(fontSize = 12.sp, fontWeight = FontWeight.Black),
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "Tile ${player.square}/100",
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                color = if (isActive) GoldAccent else Color.White.copy(alpha = 0.78f),
+                maxLines = 1
+            )
+        }
+    }
+}
+
+@Composable
+private fun SnakesCornerDiceSlot(
+    player: SnakesPlayer,
+    isActive: Boolean,
+    canRoll: Boolean,
+    lastDiceRoll: Int?,
+    isRolling: Boolean,
+    onRollClick: () -> Unit
+) {
+    if (isActive) {
+        Dice3D(
+            value = lastDiceRoll,
+            isRolling = isRolling,
+            canRoll = canRoll,
+            accentColor = player.color.primary,
+            onRollClick = onRollClick,
+            size = 46.dp,
+            testTag = "snakes_dice_button"
+        )
+    } else {
+        Box(
+            modifier = Modifier
+                .size(46.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.White.copy(alpha = 0.08f))
+                .border(1.dp, player.color.primary.copy(alpha = 0.45f), RoundedCornerShape(12.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .clip(CircleShape)
+                    .background(player.color.primary.copy(alpha = 0.55f))
+            )
+        }
+    }
+}
+
+@Composable
+private fun SnakesTwoPlayerDock(
     state: SnakesLaddersState,
     isRolling: Boolean,
     onRollClick: () -> Unit
@@ -401,67 +645,34 @@ private fun SnakesBottomControlDock(
             .fillMaxWidth()
             .clickable(enabled = canHumanRoll, onClick = onRollClick)
     ) {
-        if (players.size == 2) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                SnakesPlayerBadge(
-                    player = players[0],
-                    isActive = state.currentTurnIndex == 0 && !state.isMatchOver,
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(Modifier.width(8.dp))
-                Dice3D(
-                    value = state.lastDiceRoll,
-                    isRolling = isRolling,
-                    canRoll = canHumanRoll,
-                    accentColor = state.currentPlayer.color.primary,
-                    onRollClick = onRollClick,
-                    size = 54.dp,
-                    testTag = "snakes_dice_button"
-                )
-                Spacer(Modifier.width(8.dp))
-                SnakesPlayerBadge(
-                    player = players[1],
-                    isActive = state.currentTurnIndex == 1 && !state.isMatchOver,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        } else {
-            // 3-4 players: Left pair | Center Dice | Right pair
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    SnakesPlayerBadge(players[0], state.currentTurnIndex == 0 && !state.isMatchOver)
-                    if (players.size >= 3) {
-                        SnakesPlayerBadge(players[2], state.currentTurnIndex == 2 && !state.isMatchOver)
-                    }
-                }
-                Dice3D(
-                    value = state.lastDiceRoll,
-                    isRolling = isRolling,
-                    canRoll = canHumanRoll,
-                    accentColor = state.currentPlayer.color.primary,
-                    onRollClick = onRollClick,
-                    size = 54.dp,
-                    testTag = "snakes_dice_button"
-                )
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    SnakesPlayerBadge(players[1], state.currentTurnIndex == 1 && !state.isMatchOver)
-                    if (players.size >= 4) {
-                        SnakesPlayerBadge(players[3], state.currentTurnIndex == 3 && !state.isMatchOver)
-                    }
-                }
-            }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            SnakesPlayerBadge(
+                player = players[0],
+                isActive = state.currentTurnIndex == 0 && !state.isMatchOver,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(Modifier.width(8.dp))
+            Dice3D(
+                value = state.lastDiceRoll,
+                isRolling = isRolling,
+                canRoll = canHumanRoll,
+                accentColor = state.currentPlayer.color.primary,
+                onRollClick = onRollClick,
+                size = 54.dp,
+                testTag = "snakes_dice_button"
+            )
+            Spacer(Modifier.width(8.dp))
+            SnakesPlayerBadge(
+                player = players[1],
+                isActive = state.currentTurnIndex == 1 && !state.isMatchOver,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }

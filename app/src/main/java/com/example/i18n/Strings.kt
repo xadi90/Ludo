@@ -65,7 +65,9 @@ data class AppStrings(
     val claimReward: String,
     val claimedToday: String,
     val snakesAndLadders: String,
-    val snakesLaddersSub: String
+    val snakesLaddersSub: String,
+    val secretVaultTitle: String,
+    val secretVaultSub: String
 )
 
 val EnglishStrings = AppStrings(
@@ -126,7 +128,9 @@ val EnglishStrings = AppStrings(
     claimReward = "Claim Reward",
     claimedToday = "Claimed Today",
     snakesAndLadders = "Snakes & Ladders",
-    snakesLaddersSub = "1-100 Classic Board"
+    snakesLaddersSub = "1-100 Classic Board",
+    secretVaultTitle = "Privacy Vault",
+    secretVaultSub = "Password-locked hidden gallery & files"
 )
 
 val BanglaStrings = AppStrings(
@@ -187,7 +191,9 @@ val BanglaStrings = AppStrings(
     claimReward = "পুরস্কার নিন",
     claimedToday = "আজ নেওয়া হয়েছে",
     snakesAndLadders = "সাপ ও মই গেম",
-    snakesLaddersSub = "১-১০০ ক্লাসিক বোর্ড"
+    snakesLaddersSub = "১-১০০ ক্লাসিক বোর্ড",
+    secretVaultTitle = "সিক্রেট ভল্ট (Vault)",
+    secretVaultSub = "পাসওয়ার্ড দিয়ে গ্যালারির ছবি ও ফাইল লুকান"
 )
 
 fun stringsForLanguage(code: String): AppStrings =

@@ -280,6 +280,7 @@ fun SettingsScreen(
     settings: AppSettingsEntity,
     onUpdateSettings: ((AppSettingsEntity) -> AppSettingsEntity) -> Unit,
     onAboutDeveloper: () -> Unit,
+    onOpenSecretVault: () -> Unit,
     onBack: () -> Unit
 ) {
     val strings = LocalAppStrings.current
@@ -428,6 +429,7 @@ fun SettingsScreen(
                         infoModalBody = "${DeveloperIdentity.APP_NAME} v${DeveloperIdentity.APP_VERSION}\nUltimate 3D Offline & AI Ludo Arena supporting Classic 4P, Hexagonal 6P, Team Battles, Power Mode, and Championship Tournaments."
                     }
                     SettingsLinkRow(strings.aboutDeveloper, onClick = onAboutDeveloper)
+                    SettingsLinkRow(strings.secretVaultTitle, onClick = onOpenSecretVault)
                 }
             }
         }

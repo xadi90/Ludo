@@ -3,10 +3,12 @@ package com.example.ui.screens
 import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -94,6 +96,7 @@ import com.example.ui.theme.LudoRed
 import com.example.ui.theme.LudoRedDark
 import com.example.ui.theme.LudoYellowDark
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     profile: PlayerProfileEntity,
@@ -113,7 +116,8 @@ fun HomeScreen(
     onDailyRewards: () -> Unit,
     onSettings: () -> Unit,
     onProfile: () -> Unit,
-    onAboutDeveloper: () -> Unit
+    onAboutDeveloper: () -> Unit,
+    onOpenSecretVault: () -> Unit
 ) {
     val strings = LocalAppStrings.current
     val context = LocalContext.current
@@ -242,7 +246,7 @@ fun HomeScreen(
                     .fillMaxSize()
                     .testTag("home_menu_grid")
             ) {
-                // Hero Logo Banner
+                // Hero Logo Banner (Long-press discreetly opens the Secret Privacy Vault)
                 item(span = { GridItemSpan(2) }) {
                     Box(
                         modifier = Modifier
@@ -251,6 +255,11 @@ fun HomeScreen(
                             .shadow(14.dp, RoundedCornerShape(24.dp), ambientColor = LudoBlue)
                             .clip(RoundedCornerShape(24.dp))
                             .border(2.dp, GoldAccent.copy(alpha = 0.7f), RoundedCornerShape(24.dp))
+                            .combinedClickable(
+                                onClick = {},
+                                onLongClick = onOpenSecretVault
+                            )
+                            .testTag("hero_banner_vault_trigger")
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.img_ludo_hero),
