@@ -63,7 +63,9 @@ data class AppStrings(
     val termsAndConditions: String,
     val aboutApp: String,
     val claimReward: String,
-    val claimedToday: String
+    val claimedToday: String,
+    val snakesAndLadders: String,
+    val snakesLaddersSub: String
 )
 
 val EnglishStrings = AppStrings(
@@ -122,7 +124,9 @@ val EnglishStrings = AppStrings(
     termsAndConditions = "Terms & Conditions",
     aboutApp = "About LUDO",
     claimReward = "Claim Reward",
-    claimedToday = "Claimed Today"
+    claimedToday = "Claimed Today",
+    snakesAndLadders = "Snakes & Ladders",
+    snakesLaddersSub = "1-100 Classic Board"
 )
 
 val BanglaStrings = AppStrings(
@@ -181,7 +185,9 @@ val BanglaStrings = AppStrings(
     termsAndConditions = "শর্তাবলি",
     aboutApp = "অ্যাপ সম্পর্কে",
     claimReward = "পুরস্কার নিন",
-    claimedToday = "আজ নেওয়া হয়েছে"
+    claimedToday = "আজ নেওয়া হয়েছে",
+    snakesAndLadders = "সাপ ও মই গেম",
+    snakesLaddersSub = "১-১০০ ক্লাসিক বোর্ড"
 )
 
 fun stringsForLanguage(code: String): AppStrings =

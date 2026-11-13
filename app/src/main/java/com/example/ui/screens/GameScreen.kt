@@ -33,8 +33,10 @@ import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -53,6 +55,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -64,9 +67,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.local.AppSettingsEntity
+import com.example.game.BoardType
 import com.example.game.CutEvent
 import com.example.game.GameMode
 import com.example.game.GameState
+import com.example.game.PlayerColor
 import com.example.game.PlayerMatchState
 import com.example.game.PowerActivationEvent
 import com.example.game.PowerType
@@ -82,7 +87,6 @@ import com.example.ui.theme.LudoBlue
 import com.example.ui.theme.LudoBlueDark
 import com.example.ui.theme.LudoGreen
 import com.example.ui.theme.LudoGreenDark
-import com.example.ui.theme.LudoOrange
 import com.example.ui.theme.LudoPurple
 import com.example.ui.theme.LudoRed
 
@@ -108,8 +112,6 @@ fun GameScreen(
     val strings = LocalAppStrings.current
     var showRulesDialog by remember { mutableStateOf(false) }
 
-    // Android Back Button MUST show Pause/Resume/Restart/Exit dialog on Active Game,
-    // and dismiss Pause dialog back into the match when already paused.
     BackHandler {
         if (showRulesDialog) {
             showRulesDialog = false
@@ -167,7 +169,7 @@ fun GameScreen(
                             .weight(0.9f)
                             .fillMaxHeight()
                             .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.SpaceBetween
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         GameHudTopBar(
                             gameState = gameState,
@@ -178,18 +180,35 @@ fun GameScreen(
                             onToggleVibration = onToggleVibration,
                             onShowRules = { showRulesDialog = true }
                         )
-                        PlayerRosterStrip(gameState = gameState)
+                        TurnStatusStrip(gameState = gameState)
+                        CornerPodsRow(
+                            gameState = gameState,
+                            colors = if (gameState.boardType == BoardType.SIX_PLAYER) {
+                                listOf(PlayerColor.ORANGE, PlayerColor.RED, PlayerColor.GREEN)
+                            } else {
+                                listOf(PlayerColor.RED, PlayerColor.GREEN)
+                            },
+                            isTopRow = true,
+                            isDiceRolling = isDiceRolling,
+                            onRollDice = onRollDice
+                        )
+                        CornerPodsRow(
+                            gameState = gameState,
+                            colors = if (gameState.boardType == BoardType.SIX_PLAYER) {
+                                listOf(PlayerColor.PURPLE, PlayerColor.BLUE, PlayerColor.YELLOW)
+                            } else {
+                                listOf(PlayerColor.BLUE, PlayerColor.YELLOW)
+                            },
+                            isTopRow = false,
+                            isDiceRolling = isDiceRolling,
+                            onRollDice = onRollDice
+                        )
                         if (gameState.gameMode == GameMode.POWER_MODE) {
                             PowerInventoryBar(
                                 gameState = gameState,
                                 onActivatePower = onActivatePower
                             )
                         }
-                        DiceControlDock(
-                            gameState = gameState,
-                            isDiceRolling = isDiceRolling,
-                            onRollDice = onRollDice
-                        )
                     }
                 }
             } else {
@@ -210,13 +229,26 @@ fun GameScreen(
                         onShowRules = { showRulesDialog = true }
                     )
 
-                    PlayerRosterStrip(gameState = gameState)
+                    Spacer(Modifier.height(4.dp))
+
+                    // Top Side Player Pods (aligned with Top-Left & Top-Right bases)
+                    CornerPodsRow(
+                        gameState = gameState,
+                        colors = if (gameState.boardType == BoardType.SIX_PLAYER) {
+                            listOf(PlayerColor.ORANGE, PlayerColor.RED, PlayerColor.GREEN)
+                        } else {
+                            listOf(PlayerColor.RED, PlayerColor.GREEN)
+                        },
+                        isTopRow = true,
+                        isDiceRolling = isDiceRolling,
+                        onRollDice = onRollDice
+                    )
 
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth()
-                            .padding(vertical = 6.dp),
+                            .padding(vertical = 4.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         LudoBoardCanvas(
@@ -234,11 +266,22 @@ fun GameScreen(
                         )
                     }
 
-                    DiceControlDock(
+                    // Bottom Side Player Pods (aligned with Bottom-Left & Bottom-Right bases)
+                    CornerPodsRow(
                         gameState = gameState,
+                        colors = if (gameState.boardType == BoardType.SIX_PLAYER) {
+                            listOf(PlayerColor.PURPLE, PlayerColor.BLUE, PlayerColor.YELLOW)
+                        } else {
+                            listOf(PlayerColor.BLUE, PlayerColor.YELLOW)
+                        },
+                        isTopRow = false,
                         isDiceRolling = isDiceRolling,
                         onRollDice = onRollDice
                     )
+
+                    Spacer(Modifier.height(4.dp))
+
+                    TurnStatusStrip(gameState = gameState)
                 }
             }
         }
@@ -373,6 +416,7 @@ fun GameScreen(
                     modifier = Modifier.verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
+                    Text("• Tap the active player's corner dice on your side of the board to roll!")
                     Text("• Roll 6 (or 1 if enabled) to deploy a token from Base.")
                     Text("• Rolling a 6 grants a bonus roll (3 sixes in a row forfeits turn).")
                     Text("• Land on an opponent on a non-safe square to cut them back to Base!")
@@ -393,6 +437,244 @@ fun GameScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun CornerPodsRow(
+    gameState: GameState,
+    colors: List<PlayerColor>,
+    isTopRow: Boolean,
+    isDiceRolling: Boolean,
+    onRollDice: () -> Unit
+) {
+    val activeColor = gameState.currentPlayer.config.color
+    val isSixPlayer = colors.size >= 3
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(if (isSixPlayer) 6.dp else 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        colors.forEachIndexed { idx, slotColor ->
+            val player = gameState.players.firstOrNull { it.config.color == slotColor }
+            val diceOnRight = if (isSixPlayer) idx < 2 else idx == 0
+
+            if (player != null) {
+                val isActive = player.config.color == activeColor && gameState.phase != TurnPhase.MATCH_OVER
+                CornerPlayerDicePod(
+                    player = player,
+                    boardType = gameState.boardType,
+                    phase = gameState.phase,
+                    lastDiceRoll = gameState.lastDiceRoll,
+                    isActive = isActive,
+                    isDiceRolling = isDiceRolling && isActive,
+                    diceOnRight = diceOnRight,
+                    compact = isSixPlayer,
+                    onRollDice = onRollDice,
+                    modifier = Modifier.weight(1f)
+                )
+            } else {
+                // Keep opposite corners aligned to their exact corner bases
+                Spacer(modifier = Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+@Composable
+private fun CornerPlayerDicePod(
+    player: PlayerMatchState,
+    boardType: BoardType,
+    phase: TurnPhase,
+    lastDiceRoll: Int?,
+    isActive: Boolean,
+    isDiceRolling: Boolean,
+    diceOnRight: Boolean,
+    compact: Boolean,
+    onRollDice: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val canRoll = isActive && phase == TurnPhase.WAIT_FOR_ROLL && !player.config.isAi
+    val finished = player.finishedCount(boardType)
+    val podShape = RoundedCornerShape(16.dp)
+    val bgBrush = if (isActive) {
+        Brush.verticalGradient(
+            listOf(
+                player.config.color.primary.copy(alpha = 0.88f),
+                player.config.color.dark.copy(alpha = 0.96f)
+            )
+        )
+    } else {
+        Brush.verticalGradient(
+            listOf(
+                ArenaCardSurface.copy(alpha = 0.85f),
+                Color(0xFF0A1638).copy(alpha = 0.88f)
+            )
+        )
+    }
+    val diceSize = if (compact) 38.dp else 46.dp
+
+    Surface(
+        shape = podShape,
+        color = Color.Transparent,
+        border = BorderStroke(
+            width = if (isActive) 2.5.dp else 1.2.dp,
+            color = if (isActive) GoldAccent else player.config.color.primary.copy(alpha = 0.55f)
+        ),
+        modifier = modifier
+            .shadow(
+                elevation = if (isActive) 10.dp else 3.dp,
+                shape = podShape,
+                ambientColor = player.config.color.primary
+            )
+            .clip(podShape)
+            .background(bgBrush)
+            .clickable(enabled = canRoll && !isDiceRolling, onClick = onRollDice)
+            .testTag("corner_pod_${player.config.color.name.lowercase()}")
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = if (compact) 6.dp else 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            @Composable
+            fun PlayerInfoSection(infoModifier: Modifier) {
+                Row(
+                    modifier = infoModifier,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(if (compact) 26.dp else 32.dp)
+                            .clip(CircleShape)
+                            .background(player.config.color.primary)
+                            .border(1.5.dp, Color.White, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (player.config.isAi) Icons.Filled.SmartToy else Icons.Filled.Person,
+                            contentDescription = player.config.name,
+                            tint = Color.White,
+                            modifier = Modifier.size(if (compact) 15.dp else 18.dp)
+                        )
+                    }
+                    Spacer(Modifier.width(6.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = player.config.name,
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontSize = if (compact) 11.sp else 12.sp,
+                                fontWeight = FontWeight.Black
+                            ),
+                            color = Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "★$finished/4 • ⚔${player.cutsMade}" +
+                                (if (player.config.teamId > 0) " T${player.config.teamId}" else "") +
+                                (if (player.frozenTurns > 0) " ❄" else ""),
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = if (compact) 9.sp else 10.sp),
+                            color = if (isActive) GoldAccent else Color.White.copy(alpha = 0.78f),
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+
+            @Composable
+            fun DiceSlotSection() {
+                if (isActive) {
+                    Dice3D(
+                        value = lastDiceRoll,
+                        isRolling = isDiceRolling,
+                        canRoll = canRoll,
+                        accentColor = player.config.color.primary,
+                        onRollClick = onRollDice,
+                        size = diceSize,
+                        testTag = "dice_roll_button"
+                    )
+                } else {
+                    // Resting inactive die tray matching screenshot corner slots
+                    Box(
+                        modifier = Modifier
+                            .size(diceSize)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White.copy(alpha = 0.08f))
+                            .border(
+                                width = 1.dp,
+                                color = player.config.color.primary.copy(alpha = 0.45f),
+                                shape = RoundedCornerShape(12.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .clip(CircleShape)
+                                .background(player.config.color.primary.copy(alpha = 0.55f))
+                        )
+                    }
+                }
+            }
+
+            if (diceOnRight) {
+                PlayerInfoSection(Modifier.weight(1f))
+                Spacer(Modifier.width(4.dp))
+                DiceSlotSection()
+            } else {
+                DiceSlotSection()
+                Spacer(Modifier.width(4.dp))
+                PlayerInfoSection(Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+@Composable
+private fun TurnStatusStrip(gameState: GameState) {
+    val strings = LocalAppStrings.current
+    val current = gameState.currentPlayer
+    val message = when {
+        gameState.phase == TurnPhase.SELECT_TOKEN && !current.config.isAi ->
+            "${current.config.name}: ${strings.selectToken}"
+        current.config.isAi ->
+            "${current.config.name} (${strings.aiThinking})"
+        else ->
+            gameState.statusBanner.ifBlank { "${current.config.name}${strings.yourTurn}" }
+    }
+
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = ArenaCardSurface.copy(alpha = 0.9f),
+        border = BorderStroke(1.2.dp, current.config.color.primary.copy(alpha = 0.75f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .clip(CircleShape)
+                    .background(current.config.color.primary)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                color = GoldAccent,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 
@@ -491,71 +773,6 @@ private fun HudIconChip(
 }
 
 @Composable
-private fun PlayerRosterStrip(gameState: GameState) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        gameState.players.forEachIndexed { idx, p ->
-            PlayerChipCard(
-                player = p,
-                isActive = idx == gameState.currentTurnIndex && gameState.phase != TurnPhase.MATCH_OVER,
-                boardType = gameState.boardType
-            )
-        }
-    }
-}
-
-@Composable
-private fun PlayerChipCard(
-    player: PlayerMatchState,
-    isActive: Boolean,
-    boardType: com.example.game.BoardType
-) {
-    val finished = player.finishedCount(boardType)
-    Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = if (isActive) player.config.color.dark.copy(alpha = 0.95f) else ArenaCardSurface.copy(alpha = 0.78f),
-        border = BorderStroke(
-            width = if (isActive) 2.dp else 1.dp,
-            color = if (isActive) GoldAccent else player.config.color.primary.copy(alpha = 0.55f)
-        )
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(14.dp)
-                    .clip(CircleShape)
-                    .background(player.config.color.primary)
-                    .border(1.5.dp, Color.White, CircleShape)
-            )
-            Spacer(Modifier.width(6.dp))
-            Column {
-                Text(
-                    text = player.config.name,
-                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 12.sp),
-                    color = Color.White,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = "★$finished/4 • ⚔${player.cutsMade}" +
-                        (if (player.config.teamId > 0) " • T${player.config.teamId}" else "") +
-                        (if (player.frozenTurns > 0) " ❄" else ""),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (isActive) GoldAccent else Color.White.copy(alpha = 0.78f)
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun PowerInventoryBar(
     gameState: GameState,
     onActivatePower: (PowerType) -> Unit
@@ -567,7 +784,7 @@ private fun PowerInventoryBar(
         modifier = Modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
-            .padding(vertical = 4.dp),
+            .padding(vertical = 3.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -587,73 +804,6 @@ private fun PowerInventoryBar(
                     color = Color.White,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DiceControlDock(
-    gameState: GameState,
-    isDiceRolling: Boolean,
-    onRollDice: () -> Unit
-) {
-    val strings = LocalAppStrings.current
-    val current = gameState.currentPlayer
-    val canRoll = gameState.phase == TurnPhase.WAIT_FOR_ROLL && !current.config.isAi
-
-    Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = ArenaCardSurface.copy(alpha = 0.92f),
-        border = BorderStroke(1.5.dp, current.config.color.primary.copy(alpha = 0.8f)),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Dice3D(
-                value = gameState.lastDiceRoll,
-                isRolling = isDiceRolling,
-                canRoll = canRoll,
-                accentColor = current.config.color.primary,
-                onRollClick = onRollDice
-            )
-            Spacer(Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = if (current.config.isAi) "${current.config.name} (${strings.aiThinking})"
-                    else "${current.config.name}${strings.yourTurn}",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.White,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = if (gameState.phase == TurnPhase.SELECT_TOKEN && !current.config.isAi) {
-                        strings.selectToken
-                    } else {
-                        gameState.statusBanner
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = GoldAccent,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            if (canRoll) {
-                GlossyButton(
-                    text = strings.rollDice,
-                    onClick = onRollDice,
-                    topColor = current.config.color.primary,
-                    bottomColor = current.config.color.dark,
-                    height = 48.dp,
-                    testTag = "roll_action_button",
-                    modifier = Modifier.width(98.dp)
                 )
             }
         }

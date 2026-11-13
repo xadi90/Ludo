@@ -213,4 +213,29 @@ class LudoEngineTest {
         assertTrue(AppSecurityManager.isValidRoomCode("AB12CD"))
         assertFalse(AppSecurityManager.isValidRoomCode("invalid"))
     }
+
+    @Test
+    fun `snakes and ladders climbs ladders, bites snakes, and wins on exact 100`() {
+        val initial = com.example.game.SnakesLaddersEngine.createInitialState(
+            com.example.game.SnakesLaddersMode.TWO_PLAYER
+        )
+        assertEquals(1, initial.players[0].square)
+
+        // Roll 3 from 1 -> lands on 4 (ladder 4 -> 25)
+        val climbed = com.example.game.SnakesLaddersEngine.rollAndMove(initial, forcedRoll = 3)
+        assertEquals(25, climbed.players[0].square)
+        assertEquals(com.example.game.SnakesTurnOutcome.LADDER_CLIMB, climbed.lastOutcome)
+
+        // Player 2 at 24 rolls 3 -> lands on 27 (snake 27 -> 5)
+        val p2NearSnake = climbed.copy(
+            players = listOf(climbed.players[0], climbed.players[1].copy(square = 24))
+        )
+        val bitten = com.example.game.SnakesLaddersEngine.rollAndMove(p2NearSnake, forcedRoll = 3)
+        assertEquals(5, bitten.players[1].square)
+        assertEquals(com.example.game.SnakesTurnOutcome.SNAKE_BITE, bitten.lastOutcome)
+
+        // Square 100 coordinate is top-left (row 0, col 0), square 1 is bottom-left (row 9, col 0)
+        assertEquals(0 to 0, com.example.game.SnakesLaddersEngine.squareToRowCol(100))
+        assertEquals(9 to 0, com.example.game.SnakesLaddersEngine.squareToRowCol(1))
+    }
 }

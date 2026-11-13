@@ -23,6 +23,7 @@ import com.example.ui.screens.OnlineMultiplayerScreen
 import com.example.ui.screens.PlayerProfileScreen
 import com.example.ui.screens.PlayerSetupScreen
 import com.example.ui.screens.SettingsScreen
+import com.example.ui.screens.SnakesLaddersScreen
 import com.example.ui.screens.TournamentScreen
 import com.example.ui.viewmodel.LudoViewModel
 
@@ -38,6 +39,7 @@ object LudoRoutes {
     const val ROUTE_PROFILE = "profile"
     const val ROUTE_SETTINGS = "settings"
     const val ROUTE_ABOUT_DEVELOPER = "about_developer"
+    const val ROUTE_SNAKES_LADDERS = "snakes_ladders"
 }
 
 @Composable
@@ -112,6 +114,10 @@ fun LudoNavHost(
                 onTeamMode = {
                     viewModel.selectGameMode(GameMode.TEAM_BATTLE)
                     navController.navigate(LudoRoutes.ROUTE_GAME_MODE)
+                },
+                onSnakesLadders = {
+                    viewModel.soundManager.playButtonClick()
+                    navController.navigate(LudoRoutes.ROUTE_SNAKES_LADDERS)
                 },
                 onTournament = {
                     viewModel.soundManager.playButtonClick()
@@ -300,6 +306,24 @@ fun LudoNavHost(
         composable(LudoRoutes.ROUTE_ABOUT_DEVELOPER) {
             AboutDeveloperScreen(
                 darkTheme = settings.darkThemeMode,
+                onBack = {
+                    viewModel.soundManager.playButtonClick()
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(LudoRoutes.ROUTE_SNAKES_LADDERS) {
+            SnakesLaddersScreen(
+                playerName = profile.nickname,
+                settings = settings,
+                soundManager = viewModel.soundManager,
+                onToggleSfx = {
+                    viewModel.updateSettings { it.copy(sfxEnabled = !it.sfxEnabled) }
+                },
+                onToggleVibration = {
+                    viewModel.updateSettings { it.copy(vibrationEnabled = !it.vibrationEnabled) }
+                },
                 onBack = {
                     viewModel.soundManager.playButtonClick()
                     navController.popBackStack()

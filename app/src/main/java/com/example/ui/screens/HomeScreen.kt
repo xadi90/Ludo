@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material.icons.filled.Stairs
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -106,6 +107,7 @@ fun HomeScreen(
     onComputerMode: () -> Unit,
     onPowerMode: () -> Unit,
     onTeamMode: () -> Unit,
+    onSnakesLadders: () -> Unit,
     onTournament: () -> Unit,
     onLeaderboard: () -> Unit,
     onDailyRewards: () -> Unit,
@@ -357,6 +359,19 @@ fun HomeScreen(
                         height = 60.dp,
                         testTag = "play_now_button",
                         modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                // Snakes & Ladders Featured Mode Tile
+                item(span = { GridItemSpan(2) }) {
+                    HomeMenuTile(
+                        title = strings.snakesAndLadders,
+                        subtitle = strings.snakesLaddersSub,
+                        icon = Icons.Filled.Stairs,
+                        topColor = Color(0xFF0EA5E9),
+                        bottomColor = Color(0xFF0369A1),
+                        testTag = "menu_snakes_ladders",
+                        onClick = onSnakesLadders
                     )
                 }
 

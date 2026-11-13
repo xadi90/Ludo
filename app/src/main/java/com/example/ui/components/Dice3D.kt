@@ -52,7 +52,8 @@ fun Dice3D(
     accentColor: Color,
     onRollClick: () -> Unit,
     modifier: Modifier = Modifier,
-    size: Dp = 68.dp
+    size: Dp = 68.dp,
+    testTag: String = "dice_roll_button"
 ) {
     val spin = remember { Animatable(0f) }
     val bounce = remember { Animatable(1f) }
@@ -111,7 +112,7 @@ fun Dice3D(
     Box(
         modifier = modifier
             .size(size)
-            .testTag("dice_roll_button")
+            .testTag(testTag)
             .graphicsLayer {
                 rotationZ = spin.value
                 rotationX = if (isRolling) spin.value * 0.5f else 0f

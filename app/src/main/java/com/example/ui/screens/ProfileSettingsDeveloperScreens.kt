@@ -33,7 +33,6 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -62,7 +61,6 @@ import com.example.data.local.MatchHistoryEntity
 import com.example.data.local.PlayerProfileEntity
 import com.example.i18n.AppLanguage
 import com.example.i18n.LocalAppStrings
-import com.example.security.AppSecurityManager
 import com.example.security.DeveloperIdentity
 import com.example.ui.components.GlossyButton
 import com.example.ui.components.GlowingGameCard
@@ -493,9 +491,6 @@ fun AboutDeveloperScreen(
     val context = LocalContext.current
     BackHandler(onBack = onBack)
 
-    val certSha = remember { AppSecurityManager.getSigningCertificateSha256(context) }
-    val integrityOk = remember { AppSecurityManager.verifyDeveloperIdentityIntegrity() }
-
     RoyalArenaBackground(darkTheme = darkTheme) {
         Column(
             modifier = Modifier
@@ -591,33 +586,6 @@ fun AboutDeveloperScreen(
                     testTag = "call_developer_button",
                     modifier = Modifier.fillMaxWidth()
                 )
-
-                GlowingGameCard(accentColor = LudoGreen) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Filled.VerifiedUser,
-                            contentDescription = null,
-                            tint = if (integrityOk) LudoGreen else LudoRed
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = if (integrityOk) "Ownership Integrity Verified" else "Integrity Alert",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = if (integrityOk) LudoGreen else LudoRed
-                        )
-                    }
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        text = "Ownership Seal: ${DeveloperIdentity.ownershipFingerprint()}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "APK Signing SHA-256: ${certSha.take(35)}...",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
         }
     }

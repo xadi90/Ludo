@@ -63,7 +63,7 @@ class ExampleRobolectricTest {
     }
 
     @Test
-    fun `home screen displays LUDO and locked developer identity`() {
+    fun `home screen displays LUDO and locked developer identity without ownership integrity card`() {
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("play_now_button").assertIsDisplayed()
         composeRule.onNodeWithTag("home_menu_grid")
@@ -73,17 +73,33 @@ class ExampleRobolectricTest {
         composeRule.onAllNodesWithText(DeveloperIdentity.DEVELOPER_NAME).onFirst().assertIsDisplayed()
         composeRule.onNodeWithText(DeveloperIdentity.DEVELOPER_EMAIL).assertIsDisplayed()
         composeRule.onNodeWithText(DeveloperIdentity.DEVELOPER_PHONE).assertIsDisplayed()
+        composeRule.onAllNodesWithText("Ownership Integrity Verified").fetchSemanticsNodes().let {
+            assertEquals(0, it.size)
+        }
     }
 
     @Test
-    fun `play now launches active game board with dice and pause controls`() {
+    fun `play now launches active game board with 4 corner pods and dice`() {
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("play_now_button").performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("ludo_board_canvas").assertIsDisplayed()
+        composeRule.onNodeWithTag("corner_pod_red").assertIsDisplayed()
+        composeRule.onNodeWithTag("corner_pod_green").assertIsDisplayed()
+        composeRule.onNodeWithTag("corner_pod_blue").assertIsDisplayed()
+        composeRule.onNodeWithTag("corner_pod_yellow").assertIsDisplayed()
         composeRule.onNodeWithTag("dice_roll_button").assertIsDisplayed()
         composeRule.onNodeWithTag("game_pause_button").performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("pause_resume_button").assertIsDisplayed()
+    }
+
+    @Test
+    fun `snakes and ladders launches from home screen with board and dice`() {
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("menu_snakes_ladders").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("snakes_ladders_board").assertIsDisplayed()
+        composeRule.onNodeWithTag("snakes_dice_button").assertIsDisplayed()
     }
 }
