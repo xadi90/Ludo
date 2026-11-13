@@ -2,6 +2,8 @@ name: Build LUDO Android APK
 
 on:
   push:
+    tags-ignore:
+      - '**'
   workflow_dispatch:
 
 permissions:
@@ -50,20 +52,32 @@ jobs:
       - name: Build Debug APK
         run: gradle :app:assembleDebug --no-daemon
 
-      - name: Upload LUDO Debug APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: LUDO-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 30
+      - name: Verify APK Signature and Package
+        run: |
+          SDK_DIR="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          BUILD_TOOLS=$(ls -d "$SDK_DIR"/build-tools/* | sort -V | tail -n 1)
+          "$BUILD_TOOLS/apksigner" verify --verbose app/build/outputs/apk/debug/app-debug.apk
+          "$BUILD_TOOLS/aapt2" dump badging app/build/outputs/apk/debug/app-debug.apk | head -n 10
 
-      - name: Publish Direct LUDO.apk to GitHub Releases
+      - name: Publish Direct LUDO.apk (No ZIP) to GitHub Releases
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk LUDO.apk
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -f latest "${{ github.sha }}"
+          git push -f origin refs/tags/latest
           if gh release view latest >/dev/null 2>&1; then
+            gh release edit latest --title "LUDO Latest APK" --notes "Direct installable Android APK (no zip extraction required). Commit: ${{ github.sha }}"
             gh release upload latest LUDO.apk --clobber
           else
-            gh release create latest LUDO.apk --target "${{ github.sha }}" --title "LUDO Latest APK" --notes "Direct installable Android APK (no zip extraction required)."
+            gh release create latest LUDO.apk --title "LUDO Latest APK" --notes "Direct installable Android APK (no zip extraction required)."
           fi
+          APK_URL="https://github.com/${{ github.repository }}/releases/latest/download/LUDO.apk"
+          {
+            echo "## LUDO Direct APK Download (No ZIP)"
+            echo ""
+            echo "- **Download Direct APK:** [$APK_URL]($APK_URL)"
+            echo "- GitHub Releases serves **LUDO.apk** directly as an installable Android package without any \`.zip\` wrapper."
+          } >> "$GITHUB_STEP_SUMMARY"
